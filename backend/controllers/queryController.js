@@ -1,5 +1,5 @@
 // backend/controllers/queryController.js
-const { getLlmResponses } = require('../services/llmService');
+const { getLlmResponses, generateSessionTitle } = require('../services/llmService');
 const { generateSummary } = require('../services/summaryService');
 const QueryHistory = require('../models/QueryHistory');
 
@@ -45,10 +45,11 @@ const createQuery = async (req, res) => {
       const savedHistory = await chatSession.save();
       return res.status(200).json(savedHistory);
     } else {
-      // Create new session
+      // Create new session — generate a smart AI title from the first prompt
+      const sessionTitle = await generateSessionTitle(query);
       const newQueryHistory = new QueryHistory({
         userId: req.user._id,
-        title: query.length > 40 ? query.substring(0, 40) + '...' : query,
+        title: sessionTitle,
         turns: [newTurn],
       });
 
@@ -91,8 +92,32 @@ const deleteQuery = async (req, res) => {
   }
 };
 
+// @description   Rename a chat session title
+// @route         PATCH /api/history/:id/rename
+const renameQuery = async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+    const session = await QueryHistory.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      { title: title.trim() },
+      { new: true }
+    );
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    res.status(200).json(session);
+  } catch (error) {
+    console.error('Error renaming session:', error);
+    res.status(500).json({ error: 'Failed to rename session' });
+  }
+};
+
 module.exports = {
   createQuery,
   getHistory,
   deleteQuery,
+  renameQuery,
 };

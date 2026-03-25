@@ -58,6 +58,13 @@ const Dashboard = () => {
     }
   };
 
+  const handleRenameHistory = (id, newTitle) => {
+    setHistory(prev => prev.map(item => item._id === id ? { ...item, title: newTitle } : item));
+    if (currentQueryId === id && currentResult) {
+      setCurrentResult(prev => ({ ...prev, title: newTitle }));
+    }
+  };
+
   const handleSubmitNewQuery = async (queryText) => {
     setIsSubmitting(true);
     setError(null);
@@ -84,6 +91,7 @@ const Dashboard = () => {
         currentHistoryId={currentQueryId}
         onNewChat={handleNewChat}
         onDeleteHistory={handleDeleteHistory}
+        onRenameHistory={handleRenameHistory}
       />
 
       {/* Main Content Area */}
