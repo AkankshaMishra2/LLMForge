@@ -7,6 +7,7 @@ const QueryBox = ({ onSubmit, isLoading }) => {
     e.preventDefault();
     if (query.trim() && !isLoading) {
       onSubmit(query);
+      setQuery('');
     }
   };
 

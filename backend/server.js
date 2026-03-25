@@ -5,8 +5,9 @@ const connectDB = require('./config/db');
 const queryRoutes = require('./routes/queryRoutes');
 const authRoutes = require('./routes/authRoutes');
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from backend/.env (works regardless of where node is run from)
+const path = require('path');
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Connect to database
 connectDB();
