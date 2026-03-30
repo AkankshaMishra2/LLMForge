@@ -74,4 +74,14 @@ export const deleteHistory = async (id) => {
   }
 };
 
+export const renameHistory = async (id, title) => {
+  try {
+    const response = await api.patch(`/history/${id}/rename`, { title });
+    return response.data;
+  } catch (error) {
+    console.error('Error renaming history:', error);
+    throw new Error('Failed to rename chat');
+  }
+};
+
 export default api;

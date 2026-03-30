@@ -126,6 +126,33 @@ const deleteQuery = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete query' });
   }
 };
+// @description   Rename a specific chat session
+// @route         PATCH /api/history/:id/rename
+const renameQuery = async (req, res) => {
+  try {
+    const queryId = req.params.id;
+    const { title } = req.body;
+
+    if (!title || title.trim().length === 0) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+
+    const query = await QueryHistory.findOneAndUpdate(
+      { _id: queryId, userId: req.user._id },
+      { title: title.trim().substring(0, 60) },
+      { new: true }
+    );
+
+    if (!query) {
+      return res.status(404).json({ error: 'Chat not found or not authorized' });
+    }
+
+    res.status(200).json(query);
+  } catch (error) {
+    console.error('Error renaming query:', error);
+    res.status(500).json({ error: 'Failed to rename chat' });
+  }
+};
 
 // @description   Get all dynamic live models from Puter.js
 // @route         GET /api/query/models
@@ -143,5 +170,6 @@ module.exports = {
   createQuery,
   getHistory,
   deleteQuery,
+  renameQuery,
   getModelsList,
 };

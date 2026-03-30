@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { getHistory, submitQuery, deleteHistory } from '../services/api';
+import { getHistory, submitQuery, deleteHistory, renameHistory } from '../services/api';
 import { exportAsJSON, exportAsPDF } from '../services/exportUtils';
 import Sidebar from '../components/Sidebar';
 import ThemeToggle from '../components/ThemeToggle';
@@ -82,6 +82,18 @@ const Dashboard = () => {
     }
   };
 
+  const handleRenameHistory = async (id, newTitle) => {
+    try {
+      const updated = await renameHistory(id, newTitle);
+      setHistory(history.map(item => item._id === id ? { ...item, title: updated.title } : item));
+      if (currentQueryId === id && currentResult) {
+        setCurrentResult({ ...currentResult, title: updated.title });
+      }
+    } catch (err) {
+      setError('Failed to rename chat');
+    }
+  };
+
   const handleSubmitNewQuery = async (queryText, selectedModels = null) => {
     setIsSubmitting(true);
     setError(null);
@@ -107,6 +119,7 @@ const Dashboard = () => {
         currentHistoryId={currentQueryId}
         onNewChat={handleNewChat}
         onDeleteHistory={handleDeleteHistory}
+        onRenameHistory={handleRenameHistory}
         isCollapsed={isSidebarCollapsed}
         setIsCollapsed={setIsSidebarCollapsed}
       />
