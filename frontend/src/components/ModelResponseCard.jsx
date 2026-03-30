@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import CodeBlock from './CodeBlock';
 
 // Clean up model names from old data (e.g. "Puter (gpt-4o)" -> "GPT-4o")
 const cleanModelName = (name) => {
@@ -23,6 +24,16 @@ const cleanModelName = (name) => {
   return name;
 };
 
+const markdownComponents = {
+  pre: ({ children }) => <>{children}</>,
+  code({ node, inline, className, children, ...props }) {
+    if (!inline && (className || String(children).includes('\n'))) {
+      return <CodeBlock className={className}>{children}</CodeBlock>;
+    }
+    return <code className={className} style={{ background: 'var(--bg-tertiary)', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.85em' }} {...props}>{children}</code>;
+  }
+};
+
 const ModelResponseCard = ({ modelName, answer }) => {
   return (
     <div className="breathtaking-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '500px', maxWidth: '100%', minWidth: 0, overflow: 'hidden' }}>
@@ -31,7 +42,7 @@ const ModelResponseCard = ({ modelName, answer }) => {
         <h3 style={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-primary)' }}>{cleanModelName(modelName)}</h3>
       </div>
       <div className="markdown-prose stagger-reveal" style={{ overflowY: 'auto', overflowX: 'hidden', flex: 1, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{answer}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{answer}</ReactMarkdown>
       </div>
     </div>
   );
