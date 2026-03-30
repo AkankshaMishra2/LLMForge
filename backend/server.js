@@ -19,6 +19,15 @@ connectDB().catch((err) => {
 });
 
 // Global safety net — log but don't crash (e.g. Puter SDK internal auth checks)
+process.on('uncaughtException', (err) => {
+  // Puter SDK throws non-fatal WebSocket errors during init
+  if (err?.message?.includes('WebSocket') || err?.stack?.includes('socket.io')) {
+    console.warn('Puter SDK WebSocket error (non-fatal):', err.message);
+    return;
+  }
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
 process.on('unhandledRejection', (reason) => {
   console.warn('Unhandled Promise Rejection (non-fatal):', reason?.message || reason);
 });
