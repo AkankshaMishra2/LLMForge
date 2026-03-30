@@ -2,6 +2,37 @@
 const { getLlmResponses, getAvailableModels } = require('../services/llmService');
 const { generateSummary } = require('../services/summaryService');
 const QueryHistory = require('../models/QueryHistory');
+const puter = require('@heyputer/puter.js').puter;
+
+if (process.env.PUTER_API_KEY) {
+  puter.setAuthToken(process.env.PUTER_API_KEY);
+}
+
+// Generate a short, smart title from the user's query using an LLM
+const generateTitle = async (query) => {
+  try {
+    const response = await puter.ai.chat(
+      `Summarize this user question into a short chat title (3-6 words max, no quotes, no punctuation at the end). Just return the title, nothing else.\n\nQuestion: ${query}`,
+      { model: 'gpt-4o-mini', temperature: 0.3 }
+    );
+
+    let title = null;
+    if (typeof response === 'string') title = response;
+    else if (response?.message?.content) title = typeof response.message.content === 'string' ? response.message.content : null;
+    else if (response?.text) title = response.text;
+    else if (response?.choices?.[0]?.message?.content) title = response.choices[0].message.content;
+
+    if (title) {
+      // Clean up: remove quotes, trim, limit length
+      title = title.replace(/^["']+|["']+$/g, '').replace(/[.!?]+$/, '').trim();
+      if (title.length > 0 && title.length <= 60) return title;
+    }
+  } catch (err) {
+    console.warn('Title generation failed, using fallback:', err?.message || err);
+  }
+  // Fallback: truncate the query
+  return query.length > 40 ? query.substring(0, 40) + '...' : query;
+};
 
 // @description   Process a user query, get LLM responses, summarize, and save
 // @route         POST /api/query
@@ -53,7 +84,7 @@ const createQuery = async (req, res) => {
       // Create new session
       const newQueryHistory = new QueryHistory({
         userId: req.user._id,
-        title: query.length > 40 ? query.substring(0, 40) + '...' : query,
+        title: await generateTitle(query),
         turns: [newTurn],
       });
 
